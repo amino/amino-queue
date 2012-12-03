@@ -1,0 +1,33 @@
+{
+  "name": "amino-queue",
+  "version": "0.0.0",
+  "description": "RabbitMQ plugin for amino 1.x",
+  "main": "index.js",
+  "dependencies": {
+    "amqp": "~0.1.4",
+    "hydration": "~0.3.1"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "amino": "~1.1.3"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/carlos8f/amino-queue.git"
+  },
+  "homepage": "https://github.com/carlos8f/amino-queue",
+  "keywords": [
+    "rabbitmq",
+    "amqp",
+    "queue",
+    "job",
+    "processing",
+    "cluster",
+    "bacon"
+  ],
+  "author": "Carlos Rodriguez <carlos@s8f.org> (http://s8f.org/)",
+  "license": "MIT"
+}
