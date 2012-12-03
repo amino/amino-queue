@@ -16,9 +16,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/carlos8f/amino-queue.git"
+    "url": "git://github.com/amino/amino-queue.git"
   },
-  "homepage": "https://github.com/carlos8f/amino-queue",
+  "homepage": "https://github.com/amino/amino-queue",
   "keywords": [
     "rabbitmq",
     "amqp",
