@@ -1,6 +1,6 @@
 {
   "name": "amino-queue",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "RabbitMQ plugin for amino 1.x",
   "main": "index.js",
   "dependencies": {
