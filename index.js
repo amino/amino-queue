@@ -54,7 +54,6 @@ exports.attach = function (options) {
           catch (e) {
             return amino.emit('error', e);
           }
-
           cb(data, function (err) {
             if (err) {
               amino.emit('error', err);
@@ -63,6 +62,31 @@ exports.attach = function (options) {
           });
         });
       });
+    }
+  };
+
+  amino.queue.destroy = function (queue, opts) {
+    // Without options, the queue will be deleted even if it has pending
+    // messages or attached consumers. If opts.ifUnused is true, then the queue
+    // will only be deleted if there are no consumers. If opts.ifEmpty is true,
+    // the queue will only be deleted if it has no messages.
+    if (typeof opts === 'function') {
+      cb = opts;
+      opts = {};
+    }
+
+    if (ready) doDestroy();
+    else client.once('ready', doDestroy);
+
+    function doDestroy () {
+      try {
+        client.queue(queue, { noDeclare: true }, function (q) {
+          q.destroy(opts);
+        });
+      }
+      catch (e) {
+        amino.emit('error', e);
+      }
     }
   };
 };
