@@ -28,8 +28,10 @@ exports.attach = function (options) {
         }
         data = JSON.stringify(data);
         client.queue(queue, options.queue, function (q) {
-          client.exchange().publish(queue, data);
-        });
+          client.exchange()
+            .on('error', amino.emit.bind(amino, 'error'))
+            .publish(queue, data);
+        }).on('error', amino.emit.bind(amino, 'error'));
       }
       catch (e) {
         amino.emit('error', e);
@@ -43,7 +45,8 @@ exports.attach = function (options) {
 
     function doProcess () {
       client.queue(queue, options.queue, function (q) {
-        q.subscribe({ack: true}, function (message, headers, deliveryInfo) {
+        q.on('error', amino.emit.bind(amino, 'error'))
+         .subscribe({ack: true}, function (message, headers, deliveryInfo) {
           try {
             var data = message.data.toString();
             data = JSON.parse(data);
@@ -61,7 +64,7 @@ exports.attach = function (options) {
             q.shift();
           });
         });
-      });
+      }).on('error', amino.emit.bind(amino, 'error'));
     }
   };
 
@@ -76,14 +79,10 @@ exports.attach = function (options) {
     else client.once('ready', doDestroy);
 
     function doDestroy () {
-      try {
-        client.queue(queue, { noDeclare: true }, function (q) {
-          q.destroy(opts);
-        });
-      }
-      catch (e) {
-        amino.emit('error', e);
-      }
+      client.queue(queue, { noDeclare: true }, function (q) {
+        q.on('error', amino.emit.bind(amino, 'error'))
+         .destroy(opts);
+      }).on('error', amino.emit.bind(amino, 'error'));
     }
   };
 };
