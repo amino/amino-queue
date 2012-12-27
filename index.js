@@ -7,7 +7,7 @@ exports.attach = function (options) {
     , ready = false
 
   options || (options = {});
-  options.queue || (options.queue = {durable: true, autoDelete: true});
+  options.queue = extend({durable: true, autoDelete: true}, options.queue);
 
   client = amqp.createConnection(options);
   client.setMaxListeners(0);
@@ -87,3 +87,18 @@ exports.attach = function (options) {
     }
   };
 };
+
+// Adapted from Underscore.js
+function extend (obj) {
+  [].slice.call(arguments, 1).forEach(function (source) {
+    if (source) {
+      for (var prop in source) {
+        // Treat these objects like simple hashes
+        if (source.hasOwnProperty(prop)) {
+          obj[prop] = source[prop];
+        }
+      }
+    }
+  });
+  return obj;
+}
