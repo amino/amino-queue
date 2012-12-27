@@ -33,4 +33,14 @@ describe('basic test', function () {
       done();
     });
   });
+
+  it('should be able to destroy the queues', function (done) {
+    amino.queue.destroy('beatles');
+    amino.queue.destroy('u2');
+    amino.queue.destroy('jimi');
+    amino.queue.destroy('mamas');
+    amino.queue.destroy('cream');
+    setTimeout(done, 250);
+  });
+
 });
