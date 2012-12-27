@@ -66,7 +66,27 @@ describe('basic test', function () {
     amino.queue.destroy('mamas');
     amino.queue.destroy('cream');
     amino.queue.destroy('jazz');
-    setTimeout(done, 250);
+    setTimeout(function () {
+      amino.queue.exists('beatles', function (err, q) {
+        assert(err instanceof Error);
+        amino.queue.exists('u2', function (err, q) {
+          assert(err instanceof Error);
+          amino.queue.exists('jimi', function (err, q) {
+            assert(err instanceof Error);
+            amino.queue.exists('mamas', function (err, q) {
+              assert(err instanceof Error);
+              amino.queue.exists('cream', function (err, q) {
+                assert(err instanceof Error);
+                amino.queue.exists('jazz', function (err, q) {
+                  assert(err instanceof Error);
+                  done();
+                });
+              });
+            });
+          });
+        });
+      });
+    }, 250);
   });
 
 });
