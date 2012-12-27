@@ -70,10 +70,7 @@ exports.attach = function (options) {
     // messages or attached consumers. If opts.ifUnused is true, then the queue
     // will only be deleted if there are no consumers. If opts.ifEmpty is true,
     // the queue will only be deleted if it has no messages.
-    if (typeof opts === 'function') {
-      cb = opts;
-      opts = {};
-    }
+    opts = opts || {};
 
     if (ready) doDestroy();
     else client.once('ready', doDestroy);
