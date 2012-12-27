@@ -3,7 +3,7 @@ assert = require('assert');
 util = require('util');
 
 amino = require('amino')
-  .use(require('../'))
+  .use(require('../'), { queue: { autoDelete: false, durable: false }})
   .init();
 
 inArray = function inArray (val, arr) {

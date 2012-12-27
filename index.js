@@ -68,6 +68,17 @@ exports.attach = function (options) {
     }
   };
 
+  amino.queue.exists = function (queue, cb) {
+    if (ready) doExists();
+    else client.once('ready', doExists);
+
+    function doExists () {
+      client.queue(queue, { passive: true }, function (q) {
+        cb(null, q);
+      }).on('error', cb);
+    }
+  };
+
   amino.queue.destroy = function (queue, opts) {
     // Without options, the queue will be deleted even if it has pending
     // messages or attached consumers. If opts.ifUnused is true, then the queue
