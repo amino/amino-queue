@@ -33,4 +33,60 @@ describe('basic test', function () {
       done();
     });
   });
+
+  it('can check that a queue exists', function (done) {
+    amino.queue.exists('beatles', function (err, q) {
+      assert.ifError(err);
+      amino.queue.exists('u2', function (err, q) {
+        assert.ifError(err);
+        amino.queue.exists('jimi', function (err, q) {
+          assert.ifError(err);
+          amino.queue.exists('mamas', function (err, q) {
+            assert.ifError(err);
+            amino.queue.exists('cream', function (err, q) {
+              assert.ifError(err);
+              amino.queue.exists('jazz', function (err, q) {
+                assert.ifError(err);
+                amino.queue.exists('DNE', function (err, q) {
+                  assert(err instanceof Error);
+                  done();
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  it('should be able to destroy the queues', function (done) {
+    amino.queue.destroy('beatles');
+    amino.queue.destroy('u2');
+    amino.queue.destroy('jimi');
+    amino.queue.destroy('mamas');
+    amino.queue.destroy('cream');
+    amino.queue.destroy('jazz');
+    setTimeout(function () {
+      amino.queue.exists('beatles', function (err, q) {
+        assert(err instanceof Error);
+        amino.queue.exists('u2', function (err, q) {
+          assert(err instanceof Error);
+          amino.queue.exists('jimi', function (err, q) {
+            assert(err instanceof Error);
+            amino.queue.exists('mamas', function (err, q) {
+              assert(err instanceof Error);
+              amino.queue.exists('cream', function (err, q) {
+                assert(err instanceof Error);
+                amino.queue.exists('jazz', function (err, q) {
+                  assert(err instanceof Error);
+                  done();
+                });
+              });
+            });
+          });
+        });
+      });
+    }, 250);
+  });
+
 });

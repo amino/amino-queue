@@ -7,7 +7,7 @@ exports.attach = function (options) {
     , ready = false
 
   options || (options = {});
-  options.queue || (options.queue = {durable: true, autoDelete: true});
+  options.queue = extend({durable: true, autoDelete: true}, options.queue);
 
   client = amqp.createConnection(options);
   client.setMaxListeners(0);
@@ -28,8 +28,10 @@ exports.attach = function (options) {
         }
         data = JSON.stringify(data);
         client.queue(queue, options.queue, function (q) {
-          client.exchange().publish(queue, data);
-        });
+          client.exchange()
+            .on('error', amino.emit.bind(amino, 'error'))
+            .publish(queue, data);
+        }).on('error', amino.emit.bind(amino, 'error'));
       }
       catch (e) {
         amino.emit('error', e);
@@ -43,7 +45,8 @@ exports.attach = function (options) {
 
     function doProcess () {
       client.queue(queue, options.queue, function (q) {
-        q.subscribe({ack: true}, function (message, headers, deliveryInfo) {
+        q.on('error', amino.emit.bind(amino, 'error'))
+         .subscribe({ack: true}, function (message, headers, deliveryInfo) {
           try {
             var data = message.data.toString();
             data = JSON.parse(data);
@@ -61,7 +64,18 @@ exports.attach = function (options) {
             q.shift();
           });
         });
-      });
+      }).on('error', amino.emit.bind(amino, 'error'));
+    }
+  };
+
+  amino.queue.exists = function (queue, cb) {
+    if (ready) doExists();
+    else client.once('ready', doExists);
+
+    function doExists () {
+      client.queue(queue, { passive: true }, function (q) {
+        cb(null, q);
+      }).on('error', cb);
     }
   };
 
@@ -70,23 +84,31 @@ exports.attach = function (options) {
     // messages or attached consumers. If opts.ifUnused is true, then the queue
     // will only be deleted if there are no consumers. If opts.ifEmpty is true,
     // the queue will only be deleted if it has no messages.
-    if (typeof opts === 'function') {
-      cb = opts;
-      opts = {};
-    }
+    opts = opts || {};
 
     if (ready) doDestroy();
     else client.once('ready', doDestroy);
 
     function doDestroy () {
-      try {
-        client.queue(queue, { noDeclare: true }, function (q) {
-          q.destroy(opts);
-        });
-      }
-      catch (e) {
-        amino.emit('error', e);
-      }
+      client.queue(queue, { noDeclare: true }, function (q) {
+        q.on('error', amino.emit.bind(amino, 'error'))
+         .destroy(opts);
+      }).on('error', amino.emit.bind(amino, 'error'));
     }
   };
 };
+
+// Adapted from Underscore.js
+function extend (obj) {
+  [].slice.call(arguments, 1).forEach(function (source) {
+    if (source) {
+      for (var prop in source) {
+        // Treat these objects like simple hashes
+        if (source.hasOwnProperty(prop)) {
+          obj[prop] = source[prop];
+        }
+      }
+    }
+  });
+  return obj;
+}
