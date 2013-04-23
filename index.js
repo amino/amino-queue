@@ -96,6 +96,11 @@ exports.attach = function (options) {
       }).on('error', amino.emit.bind(amino, 'error'));
     }
   };
+
+  // Expose the client
+  // E.g., now you can gracefully shutdown:
+  // app.amino.queue._client.end();
+  amino.queue._client = client;
 };
 
 // Adapted from Underscore.js
