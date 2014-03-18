@@ -4,10 +4,13 @@ var hydration = require('hydration')
 exports.attach = function (options) {
   var amino = this
     , client
+    , queueDefaults = {}
     , ready = false
 
   options || (options = {});
-  options.queue = extend({durable: true, autoDelete: true}, options.queue);
+  options = extend({ heartbeat: 25 }, options);
+  queueDefaults = extend({ durable: true, autoDelete: true }, options.queue);
+  delete options.queue;
 
   client = amqp.createConnection(options);
   client.setMaxListeners(0);
@@ -17,7 +20,11 @@ exports.attach = function (options) {
     ready = true;
   });
 
-  amino.queue = function (queue, data) {
+  amino.queue = function (queue, options, data) {
+    if (arguments.length < 3) {
+      data = options;
+      options = {};
+    }
     if (ready) doQueue();
     else client.once('ready', doQueue);
 
@@ -27,7 +34,7 @@ exports.attach = function (options) {
           data = hydration.dehydrate(data);
         }
         data = JSON.stringify(data);
-        client.queue(queue, options.queue, function (q) {
+        client.queue(queue, extend({}, queueDefaults, options), function (q) {
           client.exchange()
             .on('error', amino.emit.bind(amino, 'error'))
             .publish(queue, data);
@@ -39,12 +46,16 @@ exports.attach = function (options) {
     }
   };
 
-  amino.process = function (queue, cb) {
+  amino.process = function (queue, options, cb) {
+    if (arguments.length < 3) {
+      cb = options;
+      options = {};
+    }
     if (ready) doProcess();
     else client.once('ready', doProcess);
 
     function doProcess () {
-      client.queue(queue, options.queue, function (q) {
+      client.queue(queue, extend({}, queueDefaults, options), function (q) {
         q.on('error', amino.emit.bind(amino, 'error'))
          .subscribe({ack: true}, function (message, headers, deliveryInfo) {
           try {
@@ -68,12 +79,16 @@ exports.attach = function (options) {
     }
   };
 
-  amino.queue.exists = function (queue, cb) {
+  amino.queue.exists = function (queue, options, cb) {
+    if (arguments.length < 3) {
+      cb = options;
+      options = {};
+    }
     if (ready) doExists();
     else client.once('ready', doExists);
 
     function doExists () {
-      client.queue(queue, { passive: true }, function (q) {
+      client.queue(queue, extend({ passive: true }, queueDefaults, options), function (q) {
         cb(null, q);
       }).on('error', cb);
     }
