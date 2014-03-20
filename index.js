@@ -16,7 +16,19 @@ exports.attach = function (options) {
   client = amqp.createConnection(options);
   client.setMaxListeners(0);
 
-  client.on('error', amino.emit.bind(amino, 'error'));
+  client.on('error', function (error) {
+    debug('connection error');
+    ready = false;
+    // node-amqp emits "error" when it is reconnecting...
+    // You keep using that word. I do not think it means what you think it means.
+    if (!client.connectionAttemptScheduled) {
+      amino.emit('error', error);
+    }
+    else {
+      debug('connection reconnecting...');
+      client.emit('reconnect');
+    }
+  });
   client.on('ready', function () {
     debug('connection ready');
     ready = true;
