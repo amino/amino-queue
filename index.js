@@ -73,8 +73,10 @@ exports.attach = function (options) {
     function doProcess () {
       debug('Adding listener to %s', queue);
       client.queue(queue, extend({}, queueDefaults, options), function (q) {
-        q.on('error', amino.emit.bind(amino, 'error'))
-         .subscribe({ack: true}, function (message, headers, deliveryInfo) {
+        var ctag;
+        q.on('error', amino.emit.bind(amino, 'error'));
+
+        q.subscribe({ack: true}, function (message, headers, deliveryInfo) {
           try {
             var data = message.data.toString();
             data = JSON.parse(data);
@@ -92,6 +94,15 @@ exports.attach = function (options) {
             }
             q.shift();
           });
+        }).addCallback(function (ok) {
+          ctag = ok.consumerTag;
+          debug('Listener added to %s (consumer tag: %s)', queue, ctag);
+        });
+        client.once('reconnect', function () {
+          debug('unsubscribing %s %s', queue, ctag);
+          q.unsubscribe(ctag);
+          // reattach once we have a new connection
+          client.once('ready', doProcess);
         });
       }).on('error', amino.emit.bind(amino, 'error'));
     }
