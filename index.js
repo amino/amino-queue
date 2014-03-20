@@ -1,5 +1,6 @@
 var hydration = require('hydration')
   , amqp = require('amqp')
+  , debug = require('debug')('amino-queue');
 
 exports.attach = function (options) {
   var amino = this
@@ -17,6 +18,7 @@ exports.attach = function (options) {
 
   client.on('error', amino.emit.bind(amino, 'error'));
   client.on('ready', function () {
+    debug('connection ready');
     ready = true;
   });
 
@@ -29,6 +31,7 @@ exports.attach = function (options) {
     else client.once('ready', doQueue);
 
     function doQueue () {
+      debug('Queueing message to %s', queue);
       try {
         if (typeof data === 'object') {
           data = hydration.dehydrate(data);
@@ -38,6 +41,7 @@ exports.attach = function (options) {
           client.exchange()
             .on('error', amino.emit.bind(amino, 'error'))
             .publish(queue, data);
+          debug('Message queued to %s', queue);
         }).on('error', amino.emit.bind(amino, 'error'));
       }
       catch (e) {
@@ -55,6 +59,7 @@ exports.attach = function (options) {
     else client.once('ready', doProcess);
 
     function doProcess () {
+      debug('Adding listener to %s', queue);
       client.queue(queue, extend({}, queueDefaults, options), function (q) {
         q.on('error', amino.emit.bind(amino, 'error'))
          .subscribe({ack: true}, function (message, headers, deliveryInfo) {
@@ -68,6 +73,7 @@ exports.attach = function (options) {
           catch (e) {
             return amino.emit('error', e);
           }
+          debug('Message received on %s (consumer tag: %s)', queue, ctag);
           cb(data, function (err) {
             if (err) {
               amino.emit('error', err);
